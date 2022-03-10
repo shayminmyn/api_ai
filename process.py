@@ -8,16 +8,18 @@ import numpy as np
 
 import faceutils as futils
 from psgan import PostProcess
-from setup import setup_config, setup_argparser\
-    
+from setup import setup_config, setup_argparser
+from service.s3_service import put_object
+import tempfile
 import uuid
+import io
 
 def process_img(id,img):
     parser = setup_argparser()
 
     parser.add_argument(
         "--reference_dir",
-        default="images/makeup",
+        default="static/images/makeup",
         help="path to reference images")
     parser.add_argument(
         "--speed",
@@ -44,6 +46,7 @@ def process_img(id,img):
     reference_paths = list(Path(args.reference_dir).glob("*"))
     np.random.shuffle(reference_paths)
     index = 0
+    links = []
     for reference_path in reference_paths:
         if not reference_path.is_file():
             print(reference_path, "is not a valid file.")
@@ -57,7 +60,11 @@ def process_img(id,img):
             (face.left(), face.top(), face.right(), face.bottom()))
         image = postprocess(source_crop, image)
         img_name = str(uuid.uuid4())
-        image.save(f"images/results/{img_name}_{id}_{reference_path.stem}.png")
+        image.save(f"static/images/results/{img_name}_{id}_{reference_path.stem}.png")
+        path = Path(f"static/images/results/{img_name}_{id}_{reference_path.stem}.png")
+        with path.open("rb") as f:
+            link = put_object(f)
+            links.append(link)  
         index = index + 1
         if (index >= 5):
             break
@@ -67,13 +74,14 @@ def process_img(id,img):
         #     for _ in range(1):
         #         inference.transfer(source, reference)
         #     print("Time cost for 1 images: ", time.time() - start)
+    return links
 
 def process_img_with_ref(id,img, styles):
     parser = setup_argparser()
 
     parser.add_argument(
         "--reference_dir",
-        default="images/makeup",
+        default="static/images/makeup",
         help="path to reference images")
     parser.add_argument(
         "--speed",
@@ -99,6 +107,7 @@ def process_img_with_ref(id,img, styles):
     source = img
     temp = list(Path(args.reference_dir).glob("*"))
     reference_paths = []
+    links=[]
     for x in temp:
         if x.stem in styles:
             print(x.stem)
@@ -116,4 +125,9 @@ def process_img_with_ref(id,img, styles):
             (face.left(), face.top(), face.right(), face.bottom()))
         image = postprocess(source_crop, image)
         img_name = str(uuid.uuid4())
-        image.save(f"images/results/{img_name}_{id}_{reference_path.stem}.png")
+        image.save(f"static/images/results/{img_name}_{id}_{reference_path.stem}.png")
+        path = Path(f"static/images/results/{img_name}_{id}_{reference_path.stem}.png")
+        with path.open("rb") as f:
+            link = put_object(f)
+            links.append(link)  
+    return links

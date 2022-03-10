@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from PIL import Image
 from process import process_img,process_img_with_ref
-import boto3, botocore
+import json
 
 app = Flask(__name__)
 
@@ -25,15 +25,16 @@ def process_makeup():
     styles = request.form.getlist('styles')
     
     img = Image.open(src.stream).convert("RGB")
+
+    links=[]
     if random is not None:
-        process_img(id,img)
+        links=process_img(id,img)
     elif styles is None:
-        process_img(id,img)
+        links=process_img(id,img)
     else:
-        print(styles)
-        process_img_with_ref(id,img, styles)
+        links=process_img_with_ref(id,img, styles)
     
-    return jsonify({'msg': 'success'})
+    return jsonify({'msg': 'success','links':links})
 
 
 
@@ -43,28 +44,6 @@ def hello():
     return jsonify({'msg': 'hello'})
 
 
-s3 = boto3.client(
-   "s3",
-   aws_access_key_id=app.config['S3_KEY'],
-   aws_secret_access_key=app.config['S3_SECRET']
-)
-
-def upload_file_to_s3(file, bucket_name,img_name, acl="public-read"):
-
-    try:
-        s3.upload_fileobj(
-            file,
-            bucket_name,
-            img_name,
-            ExtraArgs={
-                "ACL": acl,
-                "ContentType": file.content_type    
-            }
-        )
-    except Exception as e:
-        print("Something Happened: ", e)
-        return e
-    return "{}{}".format(app.config["S3_LOCATION"], file.filename)
 
 
 if __name__ == "__main__":
