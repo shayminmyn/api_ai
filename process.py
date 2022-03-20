@@ -12,7 +12,8 @@ from setup import setup_config, setup_argparser
 from service.s3_service import put_object
 import tempfile
 import uuid
-import io
+import requests
+from io import BytesIO
 
 def process_img(id,img):
     parser = setup_argparser()
@@ -112,12 +113,14 @@ def process_img_with_ref(id,img, styles):
         if x.stem in styles:
             print(x.stem)
             reference_paths.append(x)
-    for reference_path in reference_paths:
-        if not reference_path.is_file():
-            print(reference_path, "is not a valid file.")
-            continue
+    for reference_path in styles:
+        response = requests.get(reference_path)
+        reference = Image.open(BytesIO(response.content)).convert("RGB")
 
-        reference = Image.open(reference_path).convert("RGB")
+        # reference = Image.open(reference_path).convert("RGB")
+
+
+        # reference = Image.open(reference_path).convert("RGB")
 
         # Transfer the psgan from reference to source.
         image, face = inference.transfer(source, reference, with_face=True)

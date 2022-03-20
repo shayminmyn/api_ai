@@ -18,6 +18,8 @@ def put_object(file) -> str:
     return f"https://{BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com/{file_key}"
 
 
+
+
 # Usage
 # if __name__ == '__main__':
 #     with open("ERDDiagram.png", "rb") as f:

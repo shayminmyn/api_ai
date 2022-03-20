@@ -36,6 +36,21 @@ def process_makeup():
     
     return jsonify({'msg': 'success','links':links})
 
+@app.route("/make", methods=["POST"])
+def process_makeup():
+    id = request.form.get('userId')
+    src = request.files.get('img', '')
+    # random = request.form.get('random')
+    styles = request.form.getlist('styles')
+    
+    img = Image.open(src.stream).convert("RGB")
+
+    links=[]
+    
+    links=process_img_with_ref(id,img, styles)
+    
+    return jsonify({'msg': 'success','links':links})
+
 
 
 
