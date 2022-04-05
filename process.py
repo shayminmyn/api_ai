@@ -15,7 +15,7 @@ import uuid
 import requests
 from io import BytesIO
 
-def process_img(id,img):
+def process_img(img):
     parser = setup_argparser()
 
     parser.add_argument(
@@ -56,18 +56,18 @@ def process_img(id,img):
         reference = Image.open(reference_path).convert("RGB")
 
         # Transfer the psgan from reference to source.
-        image, face = inference.transfer(source, reference, with_face=True)
-        source_crop = source.crop(
-            (face.left(), face.top(), face.right(), face.bottom()))
-        image = postprocess(source_crop, image)
+        image = inference.transfer(source, reference, with_face=False)
+        # source_crop = source.crop(
+        #     (face.left(), face.top(), face.right(), face.bottom()))
+        # image = postprocess(source_crop, image)
         img_name = str(uuid.uuid4())
-        image.save(f"static/images/results/{img_name}_{id}_{reference_path.stem}.png")
-        path = Path(f"static/images/results/{img_name}_{id}_{reference_path.stem}.png")
+        image.save(f"static/images/results/{img_name}_{reference_path.stem}.png")
+        path = Path(f"static/images/results/{img_name}_{reference_path.stem}.png")
         with path.open("rb") as f:
             link = put_object(f)
             links.append(link)  
         index = index + 1
-        if (index >= 5):
+        if (index >= 2):
             break
         # if args.speed:
         #     import time
@@ -77,7 +77,7 @@ def process_img(id,img):
         #     print("Time cost for 1 images: ", time.time() - start)
     return links
 
-def process_img_with_ref(id,img, styles):
+def process_img_with_ref(img, styles):
     parser = setup_argparser()
 
     parser.add_argument(
@@ -128,8 +128,8 @@ def process_img_with_ref(id,img, styles):
             (face.left(), face.top(), face.right(), face.bottom()))
         image = postprocess(source_crop, image)
         img_name = str(uuid.uuid4())
-        image.save(f"static/images/results/{img_name}_{id}_{reference_path.stem}.png")
-        path = Path(f"static/images/results/{img_name}_{id}_{reference_path.stem}.png")
+        image.save(f"static/images/results/{img_name}_{reference_path.stem}.png")
+        path = Path(f"static/images/results/{img_name}_{reference_path.stem}.png")
         with path.open("rb") as f:
             link = put_object(f)
             links.append(link)  

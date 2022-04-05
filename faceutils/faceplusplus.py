@@ -1,5 +1,5 @@
-#!/usr/bin/python
-# -*- encoding: utf-8 -*-
+
+
 from io import BytesIO
 import time
 

@@ -43,9 +43,9 @@ class Inference:
         for i in range(len(reference_input)):
             reference_input[i] = reference_input[i].to(self.device)
 
-        # TODO: Abridge the parameter list.
-        result = self.solver.test(*source_input, *reference_input)
         
+        result = self.solver.test(*source_input, *reference_input)
+        print(result)
         if with_face:
             return result, crop_face
         return result

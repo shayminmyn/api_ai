@@ -1,5 +1,5 @@
-#!/usr/bin/python
-# -*- encoding: utf-8 -*-
+
+
 import os
 import os.path as osp
 pwd = osp.split(osp.realpath(__file__))[0]
@@ -40,7 +40,7 @@ class Solver(Track):
         self.vis_step = config.LOG.VIS_STEP
         self.snapshot_step = config.LOG.SNAPSHOT_STEP // torch.cuda.device_count()
 
-        # Data loader
+        
         self.data_loader_train = data_loader
         self.img_size = config.DATA.IMG_SIZE
 
@@ -61,7 +61,7 @@ class Solver(Track):
         self.lambda_vgg      = config.LOSS.LAMBDA_VGG
 
 
-        # Hyper-parameteres
+        
         self.d_conv_dim = config.MODEL.D_CONV_DIM
         self.d_repeat_num = config.MODEL.D_REPEAT_NUM
         self.norm = config.MODEL.NORM
@@ -71,7 +71,7 @@ class Solver(Track):
         self.build_model()
         super(Solver, self).__init__()
 
-    # For generator
+    
     def weights_init_xavier(self, m):
         classname = m.__class__.__name__
         if classname.find('Conv') != -1:
@@ -92,7 +92,7 @@ class Solver(Track):
         return out.clamp(0, 1)
 
     def build_model(self):
-        # self.G = net.Generator()
+        
         self.D_A = net.Discriminator(self.img_size, self.d_conv_dim, self.d_repeat_num, self.norm)
         self.D_B = net.Discriminator(self.img_size, self.d_conv_dim, self.d_repeat_num, self.norm)
 
@@ -108,12 +108,12 @@ class Solver(Track):
         self.vgg = net.vgg16(pretrained=True)
         self.criterionHis = HistogramLoss()
 
-        # Optimizers
+        
         self.g_optimizer = torch.optim.Adam(self.G.parameters(), self.g_lr, [self.beta1, self.beta2])
         self.d_A_optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, self.D_A.parameters()), self.d_lr, [self.beta1, self.beta2])
         self.d_B_optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, self.D_B.parameters()), self.d_lr, [self.beta1, self.beta2])
 
-        # Print networks
+        
         self.print_network(self.G, 'G')
         self.print_network(self.D_A, 'D_A')
         self.print_network(self.D_B, 'D_B')
@@ -161,8 +161,8 @@ class Solver(Track):
         res = self.G(org_A, ref_B, mask_A, mask_B, diff_A, diff_B, gamma, beta, ret)
         return res
 
-    # mask attribute: 0:background 1:face 2:left-eyebrown 3:right-eyebrown 4:left-eye 5: right-eye 6: nose
-    # 7: upper-lip 8: teeth 9: under-lip 10:hair 11: left-ear 12: right-ear 13: neck
+    
+    
 
     def test(self, real_A, mask_A, diff_A, real_B, mask_B, diff_B):
         cur_prama = None
@@ -173,36 +173,36 @@ class Solver(Track):
                                    diff_A, diff_B, gamma=cur_prama[0], beta=cur_prama[1])
         fake_A = fake_A.squeeze(0)
 
-        # normalize
+        
         min_, max_ = fake_A.min(), fake_A.max()
         fake_A.add_(-min_).div_(max_ - min_ + 1e-5)
 
         return ToPILImage()(fake_A.cpu())
 
     def train(self):
-        # The number of iterations per epoch
+        
         self.iters_per_epoch = len(self.data_loader_train)
-        # Start with trained model if exists
+        
         g_lr = self.g_lr
         d_lr = self.d_lr
         start = 0
 
         for self.e in range(start, self.num_epochs):
             for self.i, (source_input, reference_input) in enumerate(self.data_loader_train):
-                # image, mask, dist
+                
                 image_s, image_r = source_input[0].to(self.device), reference_input[0].to(self.device)
                 mask_s, mask_r = source_input[1].to(self.device), reference_input[1].to(self.device) 
                 dist_s, dist_r = source_input[2].to(self.device), reference_input[2].to(self.device)
                 self.track("data")
 
-                # ================== Train D ================== #
-                # training D_A, D_A aims to distinguish class B
-                # Real
+                
+                
+                
                 out = self.D_A(image_r)
                 self.track("D_A")
                 d_loss_real = self.criterionGAN(out, True)
                 self.track("D_A_loss")
-                # Fake
+                
                 fake_A = self.G(image_s, image_r, mask_s, mask_r, dist_s, dist_r)
                 self.track("G")
                 fake_A = Variable(fake_A.data).detach()
@@ -211,21 +211,21 @@ class Solver(Track):
                 d_loss_fake =  self.criterionGAN(out, False)
                 self.track("D_A_loss_2")
 
-                # Backward + Optimize
+                
                 d_loss = (d_loss_real.mean() + d_loss_fake.mean()) * 0.5
                 self.d_A_optimizer.zero_grad()
                 d_loss.backward(retain_graph=False)
                 self.d_A_optimizer.step()
 
-                # Logging
+                
                 self.loss = {}
                 self.loss['D-A-loss_real'] = d_loss_real.mean().item()
 
-                # training D_B, D_B aims to distinguish class A
-                # Real
+                
+                
                 out = self.D_B(image_s)
                 d_loss_real = self.criterionGAN(out, True)
-                # Fake
+                
                 self.track("G-before")
                 fake_B = self.G(image_r, image_s, mask_r, mask_s, dist_r, dist_s)
                 self.track("G-2")
@@ -233,46 +233,46 @@ class Solver(Track):
                 out = self.D_B(fake_B)
                 d_loss_fake =  self.criterionGAN(out, False)
 
-                # Backward + Optimize
+                
                 d_loss = (d_loss_real.mean() + d_loss_fake.mean()) * 0.5
                 self.d_B_optimizer.zero_grad()
                 d_loss.backward(retain_graph=False)
                 self.d_B_optimizer.step()
 
-                # Logging
+                
                 self.loss['D-B-loss_real'] = d_loss_real.mean().item()
 
-                # self.track("Discriminator backward")
+                
                
-                # ================== Train G ================== #
+                
                 if (self.i + 1) % self.g_step == 0:
-                    # identity loss
+                    
                     assert self.lambda_idt > 0
                     
-                    # G should be identity if ref_B or org_A is fed
+                    
                     idt_A = self.G(image_s, image_s, mask_s, mask_s, dist_s, dist_s)
                     idt_B = self.G(image_r, image_r, mask_r, mask_r, dist_r, dist_r)
                     loss_idt_A = self.criterionL1(idt_A, image_s) * self.lambda_A * self.lambda_idt
                     loss_idt_B = self.criterionL1(idt_B, image_r) * self.lambda_B * self.lambda_idt
-                    # loss_idt
+                    
                     loss_idt = (loss_idt_A + loss_idt_B) * 0.5
-                    # loss_idt = loss_idt_A * 0.5
-                    # self.track("Identical")
+                    
+                    
 
-                    # GAN loss D_A(G_A(A))
-                    # fake_A in class B, 
+                    
+                    
                     fake_A = self.G(image_s, image_r, mask_s, mask_r, dist_s, dist_r)
                     pred_fake = self.D_A(fake_A)
                     g_A_loss_adv = self.criterionGAN(pred_fake, True)
 
-                    # GAN loss D_B(G_B(B))
+                    
                     fake_B = self.G(image_r, image_s, mask_r, mask_s, dist_r, dist_s)
                     pred_fake = self.D_B(fake_B)
                     g_B_loss_adv = self.criterionGAN(pred_fake, True)
 
-                    # self.track("Generator forward")
+                    
 
-                    # color_histogram loss
+                    
                     g_A_loss_his = 0
                     g_B_loss_his = 0
                     g_A_lip_loss_his = self.criterionHis(
@@ -302,22 +302,22 @@ class Solver(Track):
                     g_A_loss_his += g_A_eye_loss_his
                     g_B_loss_his += g_B_eye_loss_his
 
-                    # self.track("Generator histogram")
+                    
 
-                    # cycle loss
+                    
                     rec_A = self.G(fake_A, image_s, mask_s, mask_s, dist_s, dist_s)
                     rec_B = self.G(fake_B, image_r, mask_r, mask_r, dist_r, dist_r)
 
                     g_loss_rec_A = self.criterionL1(rec_A, image_s) * self.lambda_A
                     g_loss_rec_B = self.criterionL1(rec_B, image_r) * self.lambda_B
-                    # self.track("Generator recover")
+                    
 
-                    # vgg loss
+                    
                     vgg_s = self.vgg(image_s)
                     vgg_s = Variable(vgg_s.data).detach()
                     vgg_fake_A = self.vgg(fake_A)
                     g_loss_A_vgg = self.criterionL2(vgg_fake_A, vgg_s) * self.lambda_A * self.lambda_vgg
-                    # self.track("Generator vgg")
+                    
 
                     vgg_r = self.vgg(image_r)
                     vgg_r = Variable(vgg_r.data).detach()
@@ -325,18 +325,18 @@ class Solver(Track):
                     g_loss_B_vgg = self.criterionL2(vgg_fake_B, vgg_r) * self.lambda_B * self.lambda_vgg
 
                     loss_rec = (g_loss_rec_A + g_loss_rec_B + g_loss_A_vgg + g_loss_B_vgg) * 0.5
-                    # loss_rec = (g_loss_rec_A + g_loss_A_vgg) * 0.5
+                    
 
-                    # Combined loss
+                    
                     g_loss = (g_A_loss_adv + g_B_loss_adv + loss_rec + loss_idt + g_A_loss_his + g_B_loss_his).mean()
-                    # g_loss = (g_A_loss_adv + loss_rec + loss_idt + g_A_loss_his).mean()
+                    
 
                     self.g_optimizer.zero_grad()
                     g_loss.backward(retain_graph=False)
                     self.g_optimizer.step()
-                    # self.track("Generator backward")
+                    
 
-                    # Logging
+                    
                     self.loss['G-A-loss-adv'] = g_A_loss_adv.mean().item()
                     self.loss['G-B-loss-adv'] = g_A_loss_adv.mean().item()
                     self.loss['G-loss-org'] = g_loss_rec_A.mean().item()
@@ -350,20 +350,20 @@ class Solver(Track):
                     self.loss['G-A-loss-his'] = g_A_loss_his.mean().item()
 
 
-                # Print out log info
+                
                 if (self.i + 1) % self.log_step == 0:
                     self.log_terminal()
 
-                #plot the figures
+                
                 for key_now in self.loss.keys():
                     plot_fig.plot(key_now, self.loss[key_now])
 
-                #save the images
+                
                 if (self.i) % self.vis_step == 0:
                     print("Saving middle output...")
                     self.vis_train([image_s, image_r, fake_A, rec_A, mask_s[:, :, 0], mask_r[:, :, 0]])
 
-                # Save model checkpoints
+                
                 if (self.i) % self.snapshot_step == 0:
                     self.save_models()
 
@@ -372,7 +372,7 @@ class Solver(Track):
 
                 plot_fig.tick()
 
-            # Decay learning rate
+            
             if (self.e+1) > (self.num_epochs - self.num_epochs_decay):
                 g_lr -= (self.g_lr / float(self.num_epochs_decay))
                 d_lr -= (self.d_lr / float(self.num_epochs_decay))
@@ -404,7 +404,7 @@ class Solver(Track):
                 self.snapshot_path, '{}_{}_D_B.pth'.format(self.e + 1, self.i + 1)))
 
     def vis_train(self, img_train_list):
-        # saving training results
+        
         mode = "train_vis"
         img_train_list = torch.cat(img_train_list, dim=3)
         result_path_train = osp.join(self.result_path, mode)

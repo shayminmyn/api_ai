@@ -6,7 +6,7 @@ class Config(object):
     CARTOON_DIR = 'static/cartoonize/'
     GPU = True
 
-    MAIN_IP = '127.0.0.1'
+    MAIN_IP = '0.0.0.0'
 
     S3_BUCKET = "fpt-sba-images"
     S3_KEY = "AKIA2Z5YR2RXSHCH67WC"

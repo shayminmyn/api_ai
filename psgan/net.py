@@ -1,5 +1,5 @@
-#!/usr/bin/python
-# -*- encoding: utf-8 -*-
+
+
 import math
 
 import torch
@@ -12,10 +12,10 @@ from ops.spectral_norm import spectral_norm as SpectralNorm
 from concern.track import Track
 
 
-# Defines the GAN loss which uses either LSGAN or the regular GAN.
-# When LSGAN is used, it is basically same as MSELoss,
-# but it abstracts away the need to create the target label tensor
-# that has the same size as the input
+
+
+
+
 
 class ResidualBlock(nn.Module):
     """Residual Block."""
@@ -61,11 +61,11 @@ class NONLocalBlock2D(nn.Module):
         """
         batch_size = source.size(0)
 
-        g_source = source.view(batch_size, 1, -1)  # (N, C, H*W)
-        g_source = g_source.permute(0, 2, 1)  # (N, H*W, C)
+        g_source = source.view(batch_size, 1, -1)  
+        g_source = g_source.permute(0, 2, 1)  
 
         y = torch.bmm(weight.to_dense(), g_source)
-        y = y.permute(0, 2, 1).contiguous()  # (N, C, H*W)
+        y = y.permute(0, 2, 1).contiguous()  
         y = y.view(batch_size, 1, *source.size()[2:])
         return y
 
@@ -75,7 +75,7 @@ class Generator(nn.Module, Track):
     def __init__(self):
         super(Generator, self).__init__()
 
-        # -------------------------- PNet(MDNet) for obtaining makeup matrices --------------------------
+        
 
         layers = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=7, stride=1, padding=3, bias=False),
@@ -84,7 +84,7 @@ class Generator(nn.Module, Track):
         )
         self.pnet_in = layers
 
-        # Down-Sampling
+        
         curr_dim = 64
         for i in range(2):
             layers = nn.Sequential(
@@ -96,21 +96,21 @@ class Generator(nn.Module, Track):
             setattr(self, f'pnet_down_{i+1}', layers)
             curr_dim = curr_dim * 2
 
-        # Bottleneck. All bottlenecks share the same attention module
+        
         self.atten_bottleneck_g = NONLocalBlock2D()
         self.atten_bottleneck_b = NONLocalBlock2D()
-        self.simple_spade = GetMatrix(curr_dim, 1)      # get the makeup matrix
+        self.simple_spade = GetMatrix(curr_dim, 1)      
 
         for i in range(3):
             setattr(self, f'pnet_bottleneck_{i+1}', ResidualBlock(dim_in=curr_dim, dim_out=curr_dim, net_mode='p'))
 
-        # --------------------------- TNet(MANet) for applying makeup transfer ----------------------------
+        
 
         self.tnet_in_conv = nn.Conv2d(3, 64, kernel_size=7, stride=1, padding=3, bias=False)
         self.tnet_in_spade = nn.InstanceNorm2d(64, affine=False)
         self.tnet_in_relu = nn.ReLU(inplace=True)
 
-        # Down-Sampling
+        
         curr_dim = 64
         for i in range(2):
             setattr(self, f'tnet_down_conv_{i+1}', nn.Conv2d(curr_dim, curr_dim * 2, kernel_size=4, stride=2, padding=1, bias=False))
@@ -118,11 +118,11 @@ class Generator(nn.Module, Track):
             setattr(self, f'tnet_down_relu_{i+1}', nn.ReLU(inplace=True))
             curr_dim = curr_dim * 2
 
-        # Bottleneck
+        
         for i in range(6):
             setattr(self, f'tnet_bottleneck_{i+1}', ResidualBlock(dim_in=curr_dim, dim_out=curr_dim, net_mode='t'))
 
-        # Up-Sampling
+        
         for i in range(2):
             setattr(self, f'tnet_up_conv_{i+1}', nn.ConvTranspose2d(curr_dim, curr_dim // 2, kernel_size=4, stride=2, padding=1, bias=False))
             setattr(self, f'tnet_up_spade_{i+1}', nn.InstanceNorm2d(curr_dim // 2, affine=False))
@@ -148,14 +148,14 @@ class Generator(nn.Module, Track):
 
         mask_s_re = F.interpolate(mask_s, size=gamma_s.shape[2:]).repeat(1, channel_num, 1, 1)
         gamma_s_re = gamma_s.repeat(3, 1, 1, 1)
-        gamma_s = gamma_s_re * mask_s_re  # (3, c, h, w)
+        gamma_s = gamma_s_re * mask_s_re 
         beta_s_re = beta_s.repeat(3, 1, 1, 1)
         beta_s = beta_s_re * mask_s_re
 
-        gamma = atten_module_g(gamma_s, weight)  # (3, c, h, w)
+        gamma = atten_module_g(gamma_s, weight)  
         beta = atten_module_b(beta_s, weight)
 
-        gamma = (gamma[0] + gamma[1] + gamma[2]).unsqueeze(0)  # (c, h, w) combine the three parts
+        gamma = (gamma[0] + gamma[1] + gamma[2]).unsqueeze(0) 
         beta = (beta[0] + beta[1] + beta[2]).unsqueeze(0)
         return gamma, beta
 
@@ -166,13 +166,13 @@ class Generator(nn.Module, Track):
         """
         HW = 64 * 64
         batch_size = 3
-        assert fea_s is not None   # fea_s when i==3
-        # get 3 part fea using mask
+        assert fea_s is not None  
+
         channel_num = fea_s.shape[1]
 
-        mask_c_re = F.interpolate(mask_c, size=64).repeat(1, channel_num, 1, 1)  # (3, c, h, w)
-        fea_c = fea_c.repeat(3, 1, 1, 1)                 # (3, c, h, w)
-        fea_c = fea_c * mask_c_re                        # (3, c, h, w) 3 stands for 3 parts
+        mask_c_re = F.interpolate(mask_c, size=64).repeat(1, channel_num, 1, 1)  
+        fea_c = fea_c.repeat(3, 1, 1, 1)                
+        fea_c = fea_c * mask_c_re                      
 
         mask_s_re = F.interpolate(mask_s, size=64).repeat(1, channel_num, 1, 1)
         fea_s = fea_s.repeat(3, 1, 1, 1)
@@ -181,22 +181,21 @@ class Generator(nn.Module, Track):
         theta_input = torch.cat((fea_c * 0.01, diff_c), dim=1)
         phi_input = torch.cat((fea_s * 0.01, diff_s), dim=1)
 
-        theta_target = theta_input.view(batch_size, -1, HW) # (N, C+136, H*W)
-        theta_target = theta_target.permute(0, 2, 1)        # (N, H*W, C+136)
+        theta_target = theta_input.view(batch_size, -1, HW) 
+        theta_target = theta_target.permute(0, 2, 1)        
 
-        phi_source = phi_input.view(batch_size, -1, HW)     # (N, C+136, H*W)
+        phi_source = phi_input.view(batch_size, -1, HW)    
         self.track("before mask")
 
-        weight = torch.bmm(theta_target, phi_source)        # (3, HW, HW)
+        weight = torch.bmm(theta_target, phi_source)       
         self.track("among bmm")
         with torch.no_grad():
             v = weight.detach().nonzero().long().permute(1, 0)
-            # This clone is required to correctly release cuda memory.
             weight_ind = v.clone()
             del v
             torch.cuda.empty_cache()
 
-        weight *= 200                                       # hyper parameters for visual feature
+        weight *= 200                                       
         weight = F.softmax(weight, dim=-1)
         weight = weight[weight_ind[0], weight_ind[1], weight_ind[2]]
         ret = torch.sparse.FloatTensor(weight_ind, weight, torch.Size([3, HW, HW]))
@@ -212,13 +211,13 @@ class Generator(nn.Module, Track):
         """
 
         self.track("start")
-        # forward c in tnet(MANet)
+        
         c_tnet = self.tnet_in_conv(c)
         s = self.pnet_in(s)
         c_tnet = self.tnet_in_spade(c_tnet)
         c_tnet = self.tnet_in_relu(c_tnet)
 
-        # down-sampling
+        
         for i in range(2):
             if gamma is None:
                 cur_pnet_down = getattr(self, f'pnet_down_{i+1}')
@@ -232,31 +231,31 @@ class Generator(nn.Module, Track):
             c_tnet = cur_tnet_down_relu(c_tnet)
         self.track("downsampling")
 
-        # bottleneck
+        
         for i in range(6):
             if gamma is None and i <= 2:
                 cur_pnet_bottleneck = getattr(self, f'pnet_bottleneck_{i+1}')
             cur_tnet_bottleneck = getattr(self, f'tnet_bottleneck_{i+1}')
 
-            # get s_pnet from p and transform
+            
             if i == 3:
-                if gamma is None:               # not in test_mix
+                if gamma is None:               
                     s, gamma, beta = self.simple_spade(s)
                     weight = self.get_weight(mask_c, mask_s, c_tnet, s, diff_c, diff_s)
                     gamma, beta = self.atten_feature(mask_s, weight, gamma, beta, self.atten_bottleneck_g, self.atten_bottleneck_b)
                     if ret:
                         return [gamma, beta]
-                # else:                       # in test mode
-                    # gamma, beta = param_A[0]*w + param_B[0]*(1-w), param_A[1]*w + param_B[1]*(1-w)
+                
+                    
 
-                c_tnet = c_tnet * (1 + gamma) + beta    # apply makeup transfer using makeup matrices
+                c_tnet = c_tnet * (1 + gamma) + beta    
 
             if gamma is None and i <= 2:
                 s = cur_pnet_bottleneck(s)
             c_tnet = cur_tnet_bottleneck(c_tnet)
         self.track("bottleneck")
 
-        # up-sampling
+        
         for i in range(2):
             cur_tnet_up_conv = getattr(self, f'tnet_up_conv_{i+1}')
             cur_tnet_up_spade = getattr(self, f'tnet_up_spade_{i+1}')
@@ -291,7 +290,7 @@ class Discriminator(nn.Module):
             layers.append(nn.LeakyReLU(0.01, inplace=True))
             curr_dim = curr_dim * 2
 
-        #k_size = int(image_size / np.power(2, repeat_num))
+        
         if norm=='SN':
             layers.append(SpectralNorm(nn.Conv2d(curr_dim, curr_dim*2, kernel_size=4, stride=1, padding=1)))
         else:
@@ -305,24 +304,24 @@ class Discriminator(nn.Module):
         else:
             self.conv1 = nn.Conv2d(curr_dim, 1, kernel_size=4, stride=1, padding=1, bias=False)
 
-        # conv1 remain the last square size, 256*256-->30*30
-        #self.conv2 = SpectralNorm(nn.Conv2d(curr_dim, 1, kernel_size=k_size, bias=False))
-        #conv2 output a single number
+        
+        
+        
 
     def forward(self, x):
         if x.ndim == 5:
             x = x.squeeze(0)
         assert x.ndim == 4, x.ndim
         h = self.main(x)
-        #out_real = self.conv1(h)
+        
         out_makeup = self.conv1(h)
-        #return out_real.squeeze(), out_makeup.squeeze()
+        
         return out_makeup
 
 class VGG(nn.Module):
     def __init__(self, pool='max'):
         super(VGG, self).__init__()
-        # vgg modules
+        
         self.conv1_1 = nn.Conv2d(3, 64, kernel_size=3, padding=1)
         self.conv1_2 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
         self.conv2_1 = nn.Conv2d(64, 128, kernel_size=3, padding=1)

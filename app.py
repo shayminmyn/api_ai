@@ -10,34 +10,47 @@ app.config.from_object('config.Config')
 
 @app.route("/im_size", methods=["POST"])
 def process_image():
-    id = request.form.get('userId')
+    random = request.form.get('random')
+    print(len(request.form))
+
     src = request.files.get('img', '')
     # Read the image via file.stream
-    img = Image.open(src.stream).convert("RGB")
-    process_img(id,img)
+    # img = Image.open(src.stream).convert("RGB")
+    # process_img(id,img)
     return jsonify({'msg': 'success'})
 
 @app.route("/makeup", methods=["POST"])
 def process_makeup():
-    id = request.form.get('userId')
     src = request.files.get('img', '')
     random = request.form.get('random')
     styles = request.form.getlist('styles')
     
+
     img = Image.open(src.stream).convert("RGB")
+    print("Processing")
 
     links=[]
+    # try:
+    #     if random is not None:
+    #         links=process_img(img)
+    #     elif styles is None:
+    #         links=process_img(img)
+    #     else:
+    #         links=process_img_with_ref(img, styles)
+    # except:
+    #     print("image error format")
+    #     return jsonify({'msg': 'failed'})
     if random is not None:
-        links=process_img(id,img)
+        links=process_img(img)
     elif styles is None:
-        links=process_img(id,img)
+        links=process_img(img)
     else:
-        links=process_img_with_ref(id,img, styles)
-    
+        links=process_img_with_ref(img, styles)
+
     return jsonify({'msg': 'success','links':links})
 
 @app.route("/make", methods=["POST"])
-def process_makeup():
+def process_make():
     id = request.form.get('userId')
     src = request.files.get('img', '')
     # random = request.form.get('random')
@@ -46,8 +59,11 @@ def process_makeup():
     img = Image.open(src.stream).convert("RGB")
 
     links=[]
-    
-    links=process_img_with_ref(id,img, styles)
+    try:
+        links=process_img_with_ref(id,img, styles)
+    except:
+        print("image error format")
+        return jsonify({'msg': 'failed'})
     
     return jsonify({'msg': 'success','links':links})
 

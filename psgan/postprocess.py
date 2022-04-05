@@ -1,5 +1,5 @@
-#!/usr/bin/python
-# -*- encoding: utf-8 -*-
+
+
 
 import cv2
 import numpy as np
@@ -13,7 +13,7 @@ class PostProcess:
         self.img_size = config.DATA.IMG_SIZE
 
     def __call__(self, source: Image, result: Image):
-        # TODO: Refract -> name, resize
+        
         source = np.array(source)
         result = np.array(result)
 
