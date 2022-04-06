@@ -77,7 +77,7 @@ def process_img(img):
         #     print("Time cost for 1 images: ", time.time() - start)
     return links
 
-def process_img_with_ref(img, styles):
+def process_img_with_ref(bookingId,img, styles):
     parser = setup_argparser()
 
     parser.add_argument(
@@ -114,7 +114,9 @@ def process_img_with_ref(img, styles):
             print(x.stem)
             reference_paths.append(x)
     for reference_path in styles:
-        response = requests.get(reference_path)
+        id = reference_path.split('_')[0] #id của style
+        pathImg = reference_path.split('_')[1] 
+        response = requests.get(pathImg)
         reference = Image.open(BytesIO(response.content)).convert("RGB")
 
         # reference = Image.open(reference_path).convert("RGB")
@@ -134,6 +136,6 @@ def process_img_with_ref(img, styles):
             link = put_object(f)
             item = dict()
             item["result"] = link
-            item["refer"] = reference_path
+            item["refer"] = pathImg
             links.append(item)  
     return links

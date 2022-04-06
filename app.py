@@ -56,10 +56,6 @@ def process_make():
     styles = request.form.getlist('styles')
     
     img = Image.open(src.stream).convert("RGB")
-    id = [x.split('_')[0] for x in styles]
-    data = [x.split('_')[1] for x in styles]
-    print(data)
-    print(id)
     links=[]
     # try:
     # links=process_img_with_ref(img, styles)
@@ -67,7 +63,7 @@ def process_make():
     #     print(err)
     #     return jsonify({'msg': 'failed'})
     try:
-        links=process_img_with_ref(img, data)
+        links=process_img_with_ref(bookingId,img, styles)
     except:
         return jsonify({'msg': 'failed'})
     
