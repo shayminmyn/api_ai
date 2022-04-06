@@ -28,7 +28,6 @@ def process_makeup():
 
     img = Image.open(src.stream).convert("RGB")
     print("Processing")
-
     links=[]
     try:
         if random is not None:
@@ -57,18 +56,20 @@ def process_make():
     styles = request.form.getlist('styles')
     
     img = Image.open(src.stream).convert("RGB")
-
+    id = [x.split('_')[0] for x in styles]
+    data = [x.split('_')[1] for x in styles]
+    print(data)
+    print(id)
     links=[]
     # try:
-    links=process_img_with_ref(img, styles)
+    # links=process_img_with_ref(img, styles)
     # except err:
     #     print(err)
     #     return jsonify({'msg': 'failed'})
-    # try:
-    #     links=process_img_with_ref(id,img, styles)
-    # except err:
-    #     print(err)
-    #     return jsonify({'msg': 'failed'})
+    try:
+        links=process_img_with_ref(img, data)
+    except:
+        return jsonify({'msg': 'failed'})
     
     return jsonify({'msg': 'success','links':links})
 
