@@ -138,4 +138,4 @@ def process_img_with_ref(bookingid, img, styles):
             with path.open("rb") as f:
                 linkSource = put_object(f)
                 insert_new_column(idStyle, bookingid, linkSource, link)
-    return links
+        return links
