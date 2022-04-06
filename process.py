@@ -107,14 +107,9 @@ def process_img_with_ref(bookingId,img, styles):
 
     source = img
     temp = list(Path(args.reference_dir).glob("*"))
-    reference_paths = []
-    links=[]
-    for x in temp:
-        if x.stem in styles:
-            print(x.stem)
-            reference_paths.append(x)
+
     for reference_path in styles:
-        id = reference_path.split('_')[0] #id của style
+        idStyle = reference_path.split('_')[0] #id của style
         pathImg = reference_path.split('_')[1] 
         response = requests.get(pathImg)
         reference = Image.open(BytesIO(response.content)).convert("RGB")
