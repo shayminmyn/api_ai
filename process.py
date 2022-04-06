@@ -8,6 +8,7 @@ import numpy as np
 
 import faceutils as futils
 from psgan import PostProcess
+from repositories.pbs_db_repo import insert_new_column
 from setup import setup_config, setup_argparser
 from service.s3_service import put_object
 import tempfile
@@ -77,7 +78,7 @@ def process_img(img):
         #     print("Time cost for 1 images: ", time.time() - start)
     return links
 
-def process_img_with_ref(bookingId,img, styles):
+def process_img_with_ref(bookingId, img, styles):
     parser = setup_argparser()
 
     parser.add_argument(
@@ -137,5 +138,6 @@ def process_img_with_ref(bookingId,img, styles):
             item = dict()
             item["result"] = link
             item["refer"] = pathImg
-            links.append(item)  
+            links.append(item)
+            insert_new_column(id, bookingId, '', link)
     return links
