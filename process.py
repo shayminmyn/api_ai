@@ -77,7 +77,7 @@ def process_img(img):
         #     print("Time cost for 1 images: ", time.time() - start)
     return links
 
-def process_img_with_ref(bookingId,img, styles):
+def process_img_with_ref(bookingid,img, styles):
     parser = setup_argparser()
 
     parser.add_argument(
@@ -106,8 +106,7 @@ def process_img_with_ref(bookingId,img, styles):
     postprocess = PostProcess(config)
 
     source = img
-    temp = list(Path(args.reference_dir).glob("*"))
-
+    links=[]
     for reference_path in styles:
         idStyle = reference_path.split('_')[0] #id của style
         pathImg = reference_path.split('_')[1] 
