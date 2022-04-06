@@ -30,28 +30,28 @@ def process_makeup():
     print("Processing")
 
     links=[]
-    # try:
-    #     if random is not None:
-    #         links=process_img(img)
-    #     elif styles is None:
-    #         links=process_img(img)
-    #     else:
-    #         links=process_img_with_ref(img, styles)
-    # except:
-    #     print("image error format")
-    #     return jsonify({'msg': 'failed'})
-    if random is not None:
-        links=process_img(img)
-    elif styles is None:
-        links=process_img(img)
-    else:
-        links=process_img_with_ref(img, styles)
+    try:
+        if random is not None:
+            links=process_img(img)
+        elif styles is None:
+            links=process_img(img)
+        else:
+            links=process_img_with_ref(img, styles)
+    except:
+        print("image error format")
+        return jsonify({'msg': 'failed'})
+    # if random is not None:
+    #     links=process_img(img)
+    # elif styles is None:
+    #     links=process_img(img)
+    # else:
+    #     links=process_img_with_ref(img, styles)
 
     return jsonify({'msg': 'success','links':links})
 
 @app.route("/make", methods=["POST"])
 def process_make():
-    id = request.form.get('userId')
+    bookingId = request.form.get('bookingId')
     src = request.files.get('img', '')
     # random = request.form.get('random')
     styles = request.form.getlist('styles')
@@ -59,11 +59,16 @@ def process_make():
     img = Image.open(src.stream).convert("RGB")
 
     links=[]
-    try:
-        links=process_img_with_ref(id,img, styles)
-    except:
-        print("image error format")
-        return jsonify({'msg': 'failed'})
+    # try:
+    links=process_img_with_ref(img, styles)
+    # except err:
+    #     print(err)
+    #     return jsonify({'msg': 'failed'})
+    # try:
+    #     links=process_img_with_ref(id,img, styles)
+    # except err:
+    #     print(err)
+    #     return jsonify({'msg': 'failed'})
     
     return jsonify({'msg': 'success','links':links})
 
