@@ -78,7 +78,7 @@ def process_img(img):
         #     print("Time cost for 1 images: ", time.time() - start)
     return links
 
-def process_img_with_ref(bookingId, img, styles):
+def process_img_with_ref(bookingid, img, styles):
     parser = setup_argparser()
 
     parser.add_argument(
@@ -107,15 +107,9 @@ def process_img_with_ref(bookingId, img, styles):
     postprocess = PostProcess(config)
 
     source = img
-    temp = list(Path(args.reference_dir).glob("*"))
-    reference_paths = []
     links=[]
-    for x in temp:
-        if x.stem in styles:
-            print(x.stem)
-            reference_paths.append(x)
     for reference_path in styles:
-        id = reference_path.split('_')[0] #id của style
+        idStyle = reference_path.split('_')[0] #id của style
         pathImg = reference_path.split('_')[1] 
         response = requests.get(pathImg)
         reference = Image.open(BytesIO(response.content)).convert("RGB")
@@ -139,5 +133,5 @@ def process_img_with_ref(bookingId, img, styles):
             item["result"] = link
             item["refer"] = pathImg
             links.append(item)
-            insert_new_column(id, bookingId, '', link)
+            insert_new_column(idStyle, bookingid, '', link)
     return links
