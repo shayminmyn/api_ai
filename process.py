@@ -131,5 +131,6 @@ def process_img_with_ref(bookingid,img, styles):
             item = dict()
             item["result"] = link
             item["refer"] = pathImg
-            links.append(item)  
+            links.append(item) 
+         
     return links
