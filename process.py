@@ -133,5 +133,9 @@ def process_img_with_ref(bookingid, img, styles):
             item["result"] = link
             item["refer"] = pathImg
             links.append(item)
-            insert_new_column(idStyle, bookingid, '', link)
-    return links
+            source.save(f"static/images/results/{img_name}_srouce.png")
+            pathSrouce = Path(f"static/images/results/{img_name}.png")
+            with path.open("rb") as f:
+                linkSource = put_object(f)
+                insert_new_column(idStyle, bookingid, linkSource, link)
+        return links
