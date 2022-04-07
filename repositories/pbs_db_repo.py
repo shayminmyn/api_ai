@@ -22,7 +22,7 @@ def get_db_user() -> str:
 
 def get_connection():
     return psycopg2.connect(
-        database="pbs-db",
+        database="pbs_db",
         user=get_db_user(),
         password=get_db_password(),
         host=get_db_endpoint(),
@@ -42,6 +42,7 @@ def insert_new_column(style_id, booking_id, original_image_url, edited_image_url
         '''
         cur.execute(query, (style_id, booking_id, original_image_url, edited_image_url))
         cur.close()
+        conn.commit()
     except (Exception, psycopg2.DatabaseError) as error:  # pylint: disable=broad-except
         print(error)
     if conn is not None:

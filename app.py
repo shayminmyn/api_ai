@@ -1,11 +1,12 @@
 from PIL import Image
 from flask import Flask, request, jsonify
-
+from dotenv import load_dotenv
 from process import process_img, process_img_with_ref
 
 app = Flask(__name__)
 
 app.config.from_object('config.Config')
+load_dotenv()
 
 
 @app.route("/im_size", methods=["POST"])
