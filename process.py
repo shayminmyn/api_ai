@@ -108,6 +108,14 @@ def process_img_with_ref(bookingid, img, styles):
 
     source = img
     links=[]
+
+
+    source.save(f"static/images/results/{img_name}_srouce.png")
+    pathSrouce = Path(f"static/images/results/{img_name}.png")
+    linkSource = ''
+    with pathSrouce.open("rb") as f:
+        linkSource = put_object(f)
+
     for reference_path in styles:
         idStyle = reference_path.split('_')[0] #id của style
         pathImg = reference_path.split('_')[1] 
@@ -132,10 +140,7 @@ def process_img_with_ref(bookingid, img, styles):
             item = dict()
             item["result"] = link
             item["refer"] = pathImg
+            item['source'] = linkSource
             links.append(item)
-            source.save(f"static/images/results/{img_name}_srouce.png")
-            pathSrouce = Path(f"static/images/results/{img_name}.png")
-            with path.open("rb") as f:
-                linkSource = put_object(f)
-                insert_new_column(idStyle, bookingid, linkSource, link)
-        return links
+            
+    return links
