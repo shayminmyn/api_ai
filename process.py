@@ -109,16 +109,18 @@ def process_img_with_ref(bookingid, img, styles):
     source = img
     links=[]
 
-
-    source.save(f"static/images/results/{img_name}_srouce.png")
-    pathSrouce = Path(f"static/images/results/{img_name}.png")
+    
+    img_name = str(uuid.uuid4())
+    img.save(f"static/images/results/{img_name}_source.png")
+    pathSrouce = Path(f"static/images/results/{img_name}_source.png")
     linkSource = ''
     with pathSrouce.open("rb") as f:
         linkSource = put_object(f)
 
     for reference_path in styles:
         idStyle = reference_path.split('_')[0] #id của style
-        pathImg = reference_path.split('_')[1] 
+        name = reference_path.split('_')[1] #name
+        pathImg = reference_path.split('_')[2] 
         response = requests.get(pathImg)
         reference = Image.open(BytesIO(response.content)).convert("RGB")
 
@@ -141,6 +143,9 @@ def process_img_with_ref(bookingid, img, styles):
             item["result"] = link
             item["refer"] = pathImg
             item['source'] = linkSource
+            item['bookingId'] = bookingid
+            item['idStyle'] = idStyle
+            item["name"] = name
             links.append(item)
             
     return links

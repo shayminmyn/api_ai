@@ -68,6 +68,7 @@ def process_make():
         links = process_img_with_ref(bookingId, img, styles)
     except:
         return jsonify({'msg': 'failed'})
+    # links = process_img_with_ref(bookingId, img, styles)
 
     return jsonify({'msg': 'success', 'links': links})
 
