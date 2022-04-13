@@ -1,0 +1,6 @@
+version: "3.2"
+services:
+  ai_api:
+    image: ai-api
+    ports:
+      - 8000:8000

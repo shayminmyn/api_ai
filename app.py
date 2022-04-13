@@ -2,8 +2,12 @@ from PIL import Image
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 from process import process_img, process_img_with_ref
+import logging
 
 app = Flask(__name__)
+
+LOGGER = logging.getLogger()
+LOGGER.setLevel(logging.DEBUG)
 
 app.config.from_object('config.Config')
 load_dotenv()
@@ -56,7 +60,7 @@ def process_make():
     src = request.files.get('img', '')
     # random = request.form.get('random')
     styles = request.form.getlist('styles')
-
+    
     img = Image.open(src.stream).convert("RGB")
     links = []
     # try:
@@ -66,8 +70,8 @@ def process_make():
     #     return jsonify({'msg': 'failed'})
     try:
         links = process_img_with_ref(bookingId, img, styles)
-    except:
-        return jsonify({'msg': 'failed'})
+    except Exception as e:
+        return jsonify({'msg': 'failed', 'error': str(e.__traceback__)})
     # links = process_img_with_ref(bookingId, img, styles)
 
     return jsonify({'msg': 'success', 'links': links})
