@@ -1,6 +1,7 @@
 dlib
 opencv-python
 torch
+torchvision
 flask
 boto3
 botocore
