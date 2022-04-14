@@ -81,17 +81,10 @@ def process_img(img):
 def process_img_with_ref(bookingid, img, styles):
     parser = setup_argparser()
 
-    parser.add_argument(
-        "--reference_dir",
-        default="static/images/makeup",
-        help="path to reference images")
-    parser.add_argument(
-        "--speed",
-        action="store_true",
-        help="test speed")
+
     parser.add_argument(
         "--device",
-        default="cuda",
+        default="cpu",
         help="device used for inference")
     parser.add_argument(
         "--model_path",

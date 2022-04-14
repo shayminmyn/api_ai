@@ -11,10 +11,12 @@ RUN apt-get install -y build-essential cmake
 RUN apt-get install -y libopencv-dev
 
 # pip install
-COPY ./requirements.txt ./app/requirements.txt
+COPY ./requirements.txt ./requirements.txt
 
-RUN pip install -r ./app/requirements.txt
+RUN pip install -r ./requirements.txt
 
-COPY . ./app
+COPY . .
 
-ENTRYPOINT [ "python", "./app/app.py" ]
+
+
+ENTRYPOINT [ "python", "./app.py" ]
