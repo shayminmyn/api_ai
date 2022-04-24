@@ -21,6 +21,7 @@ import tools.plot as plot_fig
 from . import net
 from .preprocess import PreProcess
 from concern.track import Track
+import uuid
 
 
 class Solver(Track):
@@ -169,13 +170,19 @@ class Solver(Track):
         with torch.no_grad():
             cur_prama = self.generate(real_A, real_B, None, None, mask_A, mask_B, 
                                       diff_A, diff_B, ret=True)
+
+     
             fake_A = self.generate(real_A, real_B, None, None, mask_A, mask_B, 
                                    diff_A, diff_B, gamma=cur_prama[0], beta=cur_prama[1])
+                                   
+        self.vis_train([real_A,real_B,fake_A])
+                                   
         fake_A = fake_A.squeeze(0)
 
         
         min_, max_ = fake_A.min(), fake_A.max()
         fake_A.add_(-min_).div_(max_ - min_ + 1e-5)
+        
 
         return ToPILImage()(fake_A.cpu())
 
@@ -407,10 +414,11 @@ class Solver(Track):
         
         mode = "train_vis"
         img_train_list = torch.cat(img_train_list, dim=3)
-        result_path_train = osp.join(self.result_path, mode)
+        result_path_train = osp.join('./log/', mode)
         if not osp.exists(result_path_train):
             os.makedirs(result_path_train)
-        save_path = os.path.join(result_path_train, '{}_{}_fake.jpg'.format(self.e, self.i))
+        img_name = str(uuid.uuid4())
+        save_path = os.path.join(result_path_train, '{}.jpg'.format(img_name))
         save_image(self.de_norm(img_train_list.data), save_path, normalize=True)
 
     def log_terminal(self):

@@ -18,7 +18,6 @@ from concern.track import Track
 
 
 class ResidualBlock(nn.Module):
-    """Residual Block."""
     def __init__(self, dim_in, dim_out, net_mode=None):
         if net_mode == 'p' or (net_mode is None):
             use_affine = True
@@ -56,9 +55,7 @@ class NONLocalBlock2D(nn.Module):
                            kernel_size=1, stride=1, padding=0)
 
     def forward(self, source, weight):
-        """(b, c, h, w)
-        src_diff: (3, 136, 32, 32)
-        """
+        
         batch_size = source.size(0)
 
         g_source = source.view(batch_size, 1, -1)  
@@ -138,12 +135,7 @@ class Generator(nn.Module, Track):
 
     @staticmethod
     def atten_feature(mask_s, weight, gamma_s, beta_s, atten_module_g, atten_module_b):
-        """
-        feature size: (1, c, h, w)
-        mask_c(s): (3, 1, h, w)
-        diff_c: (1, 138, 256, 256)
-        return: (1, c, h, w)
-        """
+        
         channel_num = gamma_s.shape[1]
 
         mask_s_re = F.interpolate(mask_s, size=gamma_s.shape[2:]).repeat(1, channel_num, 1, 1)
@@ -160,10 +152,7 @@ class Generator(nn.Module, Track):
         return gamma, beta
 
     def get_weight(self, mask_c, mask_s, fea_c, fea_s, diff_c, diff_s):
-        """  s --> source; c --> target
-        feature size: (1, 256, 64, 64)
-        diff: (3, 136, 32, 32)
-        """
+    
         HW = 64 * 64
         batch_size = 3
         assert fea_s is not None  
@@ -204,11 +193,7 @@ class Generator(nn.Module, Track):
 
     def forward(self, c, s, mask_c, mask_s, diff_c, diff_s, gamma=None, beta=None, ret=False):
         c, s, mask_c, mask_s, diff_c, diff_s = [x.squeeze(0) if x.ndim == 5 else x for x in [c, s, mask_c, mask_s, diff_c, diff_s]]
-        """attention version
-        c: content, stands for source image. shape: (b, c, h, w)
-        s: style, stands for reference image. shape: (b, c, h, w)
-        mask_list_c: lip, skin, eye. (b, 1, h, w)
-        """
+    
 
         self.track("start")
         
@@ -412,11 +397,5 @@ def _vgg(arch, cfg, batch_norm, pretrained, progress, **kwargs):
 
 
 def vgg16(pretrained=False, progress=True, **kwargs):
-    r"""VGG 16-layer model (configuration "D")
-    `"Very Deep Convolutional Networks For Large-Scale Image Recognition" <https://arxiv.org/pdf/1409.1556.pdf>`_
-
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-        progress (bool): If True, displays a progress bar of the download to stderr
-    """
+    
     return _vgg('vgg16', 'D', False, pretrained, progress, **kwargs)

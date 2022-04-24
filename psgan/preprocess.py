@@ -109,13 +109,14 @@ class PreProcess:
         diff = to_var((self.fix.double() - torch.tensor(lms).to(self.device)).unsqueeze(0), requires_grad=False).to(self.device)
 
         mask_lip = (mask == self.lip_class[0]).float() + (mask == self.lip_class[1]).float()
+    
         mask_face = (mask == self.face_class[0]).float() + (mask == self.face_class[1]).float()
 
         mask_eyes = torch.zeros_like(mask, device=device)
         copy_area(mask_eyes, mask_face, lms_eye_left)
         copy_area(mask_eyes, mask_face, lms_eye_right)
         mask_eyes = to_var(mask_eyes, requires_grad=False).to(device)
-
+    
         mask_list = [mask_lip, mask_face, mask_eyes]
         mask_aug = torch.cat(mask_list, 0)      
         mask_re = F.interpolate(mask_aug, size=self.diff_size).repeat(1, diff.shape[1], 1, 1)  
@@ -129,7 +130,6 @@ class PreProcess:
 
     def __call__(self, image: Image):
         face = futils.dlib.detect(image)
-
         if not face:
             return None, None, None
 
@@ -151,9 +151,15 @@ class PreProcess:
         
         lms = futils.dlib.landmarks(image, face) * self.img_size / image.width
         lms = lms.round()
+        
+ 
+     
+        # temp = image
 
         mask, diff = self.process(mask, lms, device=self.device)
         image = image.resize((self.img_size, self.img_size), Image.ANTIALIAS)
         image = transform(image)
         real = to_var(image.unsqueeze(0))
+        if mask[0].float().sum()==0:
+            return None, None, None
         return [real, mask, diff], face_on_image, crop_face
