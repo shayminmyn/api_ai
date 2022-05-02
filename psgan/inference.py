@@ -35,3 +35,9 @@ class Inference:
         if with_face:
             return result, crop_face
         return result
+
+    def check(self,img: Image):
+        input, _, _ = self.preprocess(img)
+        if not input:
+            return False
+        return True

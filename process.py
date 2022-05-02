@@ -78,6 +78,24 @@ def process_img(img):
         #     print("Time cost for 1 images: ", time.time() - start)
     return links
 
+def check_img(img):
+    parser = setup_argparser()
+    parser.add_argument(
+        "--device",
+        default="cpu",
+        help="device used for inference")
+    parser.add_argument(
+        "--model_path",
+        default="model/1_1_G.pth",
+        help="model for loading")
+
+    args = parser.parse_args()
+    config = setup_config(args)
+    
+    inference = Inference(
+        config, args.device, args.model_path)
+    return inference.check(img)
+
 def process_img_with_ref(bookingid, img, styles):
     parser = setup_argparser()
 

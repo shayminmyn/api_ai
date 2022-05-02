@@ -1,7 +1,7 @@
 from PIL import Image
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
-from process import process_img, process_img_with_ref
+from process import process_img, process_img_with_ref, check_img
 import logging
 
 app = Flask(__name__)
@@ -75,6 +75,23 @@ def process_make():
     # links = process_img_with_ref(bookingId, img, styles)
 
     return jsonify({'msg': 'success', 'links': links})
+
+
+@app.route("/checkimage", methods=["POST"])
+def checkimage():
+    src = request.files.get('img', '')
+    # random = request.form.get('random')
+    
+    img = Image.open(src.stream).convert("RGB")
+    # try:
+    # links=process_img_with_ref(img, styles)
+    # except err:
+    #     print(err)
+    #     return jsonify({'msg': 'failed'})
+    if check_img(img):
+        return jsonify({'msg': 'success',})
+    else:
+        return jsonify({'msg': 'failed'})
 
 
 @app.route("/hello", methods=["GET"])
