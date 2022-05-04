@@ -1,6 +1,8 @@
 from PIL import Image
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
+from flask_cors import cross_origin
+
 from process import process_img, process_img_with_ref, check_img
 import logging
 
@@ -78,6 +80,7 @@ def process_make():
 
 
 @app.route("/checkimage", methods=["POST"])
+@cross_origin()
 def checkimage():
     src = request.files.get('img', '')
     # random = request.form.get('random')
